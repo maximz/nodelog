@@ -240,8 +240,8 @@ function addMessage (from, text, time, _class) {
 }
 
 function updateRSS () {
-  var bytes = parseInt(rss);
-  if (bytes) {
+  var bytes = parseInt(rss, 10);
+  if (bytes.toString().match(/^\d+$/)) {
     var megabytes = bytes / (1024*1024);
     megabytes = Math.round(megabytes*10)/10;
     $("#rss").text(megabytes.toString());
