@@ -192,8 +192,9 @@ function scrollDown () {
 //from is the user, text is the body and time is the timestamp, defaulting to now
 //_class is a css class to apply to the message, usefull for system events
 function addMessage (from, text, time, _class) {
-  if (text === null)
+  if (text === null) {
     return;
+  }
 
   if (time == null) {
     // if the time is null or undefined, use the current time.
@@ -203,34 +204,35 @@ function addMessage (from, text, time, _class) {
     time = new Date(time);
   }
 
-  //every message you see is actually a table with 3 cols:
+  //every message you see is now an <li> tag with 3 bits of data:
   //  the time,
   //  the person who caused the event,
   //  and the content
-  var messageElement = $(document.createElement("table"));
+  var messageElement = $(document.createElement("li"));
 
   messageElement.addClass("message");
-  if (_class)
+  if (_class) {
     messageElement.addClass(_class);
+  }
 
   // sanitize
   text = util.toStaticHTML(text);
 
   // If the current user said this, add a special css class
   var nick_re = new RegExp(CONFIG.nick);
-  if (nick_re.exec(text))
+  if (nick_re.exec(text)) {
     messageElement.addClass("personal");
+  }
 
   // replace URLs with links
-  text = text.replace(util.urlRE, '<a target="_blank" href="$&">$&</a>');
+  text = text.replace(util.urlRE, '<a rel="external" href="$&">$&</a>');
 
-  var content = '<tr>'
-              + '  <td class="date">' + util.timeString(time) + '</td>'
-              + '  <td class="nick">' + util.toStaticHTML(from) + '</td>'
-              + '  <td class="msg-text">' + text  + '</td>'
-              + '</tr>'
-              ;
-  messageElement.html(content);
+  var content = [];
+  content.push('  <time class="date" datetime=' + util.timeString(time) + '">' + util.timeString(time) + '</time>');
+  content.push('  <span class="nick fn">' + util.toStaticHTML(from) + '</span>');
+  content.push('  <span class="msg-text">' + text  + '</span>');
+              
+  messageElement.html(content.join(''));
 
   //the log is the stream that we view
   $("#log").append(messageElement);
@@ -491,7 +493,16 @@ $(document).ready(function() {
   }
 
   // remove fixtures
-  $("#log table").remove();
+  $("#log li").remove();
+
+  // Open rel="external" links in a new window
+  $('#log').on('click', 'a[rel="external"]', function() {
+    var win = window.open(this.href);
+    if (win) {
+      win.focus();
+    }
+    return false;
+  });
 
   //begin listening for updates right away
   //interestingly, we don't need to join a room to get its updates
