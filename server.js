@@ -14,9 +14,10 @@ setInterval(function () {
 var fu = require("./fu"),
     sys = require("sys"),
     url = require("url"),
-    qs = require("querystring");
+    qs = require("querystring"),
+	_ = require('underscore');
 
-var MESSAGE_BACKLOG = 200,
+var MESSAGE_BACKLOG = 5000,
     SESSION_TIMEOUT = 60 * 1000;
 
 var channel = new function () {
@@ -56,7 +57,7 @@ var channel = new function () {
     var matching = [];
     for (var i = 0; i < messages.length; i++) {
       var message = messages[i];
-      if (message.timestamp > since)
+      if (since==null || message.timestamp > since)
         matching.push(message)
     }
 
@@ -173,10 +174,6 @@ fu.get("/part", function (req, res) {
 });
 
 fu.get("/recv", function (req, res) {
-  if (!qs.parse(url.parse(req.url).query).since) {
-    res.simpleJSON(400, { error: "Must supply since parameter" });
-    return;
-  }
   var id = qs.parse(url.parse(req.url).query).id;
   var session;
   if (id && sessions[id]) {
@@ -184,11 +181,19 @@ fu.get("/recv", function (req, res) {
     session.poke();
   }
 
-  var since = parseInt(qs.parse(url.parse(req.url).query).since, 10);
+  var since = qs.parse(url.parse(req.url).query).since ? parseInt(qs.parse(url.parse(req.url).query).since, 10) : null;
+  var filter = qs.parse(url.parse(req.url).query).filter;
 
   channel.query(since, function (messages) {
     if (session) session.poke();
-    res.simpleJSON(200, { messages: messages, rss: mem.rss });
+    if(filter)
+	{
+		res.simpleJSON(200, { messages: _.filter(messages, function(m) { return m.contains(filter);}), rss: mem.rss });
+	}
+	else
+	{
+		res.simpleJSON(200, { messages: messages, rss: mem.rss });
+	}
   });
 });
 

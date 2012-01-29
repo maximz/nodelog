@@ -183,7 +183,7 @@ util = {
 
 //used to keep the most recent messages visible
 function scrollDown () {
-  window.scrollBy(0, 100000000000000000);
+  window.scrollBy(0, -100000000000000000);
   $("#entry").focus();
 }
 
@@ -233,7 +233,7 @@ function addMessage (from, text, time, _class) {
   messageElement.html(content);
 
   //the log is the stream that we view
-  $("#log").append(messageElement);
+  $("#log").prepend(messageElement);
 
   //always view the most recent message when it is added
   scrollDown();
