@@ -15,7 +15,17 @@ var fu = require("./fu"),
     sys = require("sys"),
     url = require("url"),
     qs = require("querystring"),
-	_ = require('underscore');
+	_ = require('underscore'),
+	persistence = require('persistencejs/persistence').persistence,
+	persistenceStore = require('persistencejs/persistence.store.sqlite');
+	
+	persistenceStore.config(persistence, __dirname + '/nodelog.db');
+	
+var dblog = persistence.define('Log', {
+  name: "TEXT",
+  message: "TEXT",
+  dt: "DATE"
+});
 
 var MESSAGE_BACKLOG = 5000,
     SESSION_TIMEOUT = 60 * 1000;
@@ -209,5 +219,10 @@ fu.get("/send", function (req, res) {
   session.poke();
 
   channel.appendMessage(session.nick, "msg", text);
+  var dbSession = persistenceStore.getSession();
+  var l = new dbLog(dbSession, { name: session.nick, message: text, dt: (new Date()).getTime() });
+  dbSession.add(l);
+  dbSession.flush(); // submit changes
+  dbSession.close();
   res.simpleJSON(200, { rss: mem.rss });
 });
