@@ -12,7 +12,7 @@ setInterval(function () {
 
 
 var fu = require("./fu"),
-    sys = require("sys"),
+    util = require("util"),
     url = require("url"),
     qs = require("querystring"),
 	_ = require('underscore'),
